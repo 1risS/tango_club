@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #2f2f2b;
+  --foreground: #efede6;
+  --panel: #232321;
+  --surface: #34342f;
+  --line: #4b4b46;
+  --muted: #a5a195;
+  --brand-muted: #75756d;
+  --button: #74746d;
+  --button-active: #21211f;
+  --button-disabled: #d7d7d5;
+  --success: #37f643;
+  --danger: #ff2d20;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-brand-muted: var(--brand-muted);
+  --color-button: var(--button);
+  --color-button-active: var(--button-active);
+  --color-button-disabled: var(--button-disabled);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-manrope);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: radial-gradient(
+      circle at top left,
+      rgba(255, 255, 255, 0.06),
+      transparent 26%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 22%),
+    var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(239, 237, 230, 0.2);
+}
+
+summary {
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
