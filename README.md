@@ -10,7 +10,7 @@ Start the local database from the repository root:
 docker compose up -d
 ```
 
-The app already includes a local example connection in `web/.env.local`:
+The app already includes a local example connection in `.env.local`:
 
 ```bash
 DATABASE_URL=postgresql://omen_app:omen_local_dev@localhost:5432/omen_tango_club
@@ -18,9 +18,24 @@ DATABASE_SSL=disable
 ADMIN_USERNAME=iris
 ADMIN_PASSWORD=cambiar-este-password
 ADMIN_SESSION_SECRET=cambiar-esta-clave-de-sesion
+MAILGUN_API_KEY=
+MAILGUN_FROM=support@mg.layunta.ar
+MAILGUN_DOMAIN=mg.layunta.ar
 ```
 
 When you later move to Neon, replace `DATABASE_URL` with the Neon connection string and set `DATABASE_SSL=require` if needed.
+
+## Email notifications (Mailgun)
+
+When a reservation is created with channel `email`, the API attempts to send a confirmation e-mail through Mailgun.
+
+Required variables:
+
+- `MAILGUN_API_KEY`: Mailgun private API key
+- `MAILGUN_FROM`: sender address (example: `support@mg.layunta.ar`)
+- `MAILGUN_DOMAIN`: Mailgun domain (example: `mg.layunta.ar`)
+
+If `MAILGUN_API_KEY` is missing, reservations still get saved and queued, but no outbound email is sent.
 
 ## Admin privado
 

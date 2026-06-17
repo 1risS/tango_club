@@ -18,7 +18,7 @@ function getAdminConfig(): AdminConfig {
 
   if (!username || !password || !sessionSecret) {
     throw new Error(
-      "Faltan credenciales de admin. Configura ADMIN_USERNAME, ADMIN_PASSWORD y ADMIN_SESSION_SECRET en web/.env.local.",
+      "Faltan credenciales de admin. Configura ADMIN_USERNAME, ADMIN_PASSWORD y ADMIN_SESSION_SECRET.",
     );
   }
 

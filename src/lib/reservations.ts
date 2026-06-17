@@ -123,7 +123,7 @@ function getDatabaseConnectionString() {
 
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL no esta configurada. Levanta Postgres con Docker Compose y configura web/.env.local.",
+      "DATABASE_URL no esta configurada.",
     );
   }
 
