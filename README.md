@@ -14,7 +14,6 @@ The app already includes a local example connection in `.env.local`:
 
 ```bash
 DATABASE_URL=postgresql://omen_app:omen_local_dev@localhost:5432/omen_tango_club
-DATABASE_SSL=disable
 ADMIN_USERNAME=iris
 ADMIN_PASSWORD=cambiar-este-password
 ADMIN_SESSION_SECRET=cambiar-esta-clave-de-sesion
@@ -23,7 +22,7 @@ MAILGUN_FROM=support@mg.layunta.ar
 MAILGUN_DOMAIN=mg.layunta.ar
 ```
 
-When you later move to Neon, replace `DATABASE_URL` with the Neon connection string and set `DATABASE_SSL=require` if needed.
+When you later move to Neon, replace `DATABASE_URL` with the Neon connection string.
 
 ## Email notifications (Mailgun)
 

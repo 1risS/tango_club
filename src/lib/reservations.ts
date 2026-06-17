@@ -131,13 +131,7 @@ function getDatabaseConnectionString() {
 }
 
 function getDatabaseSsl(connectionString: string) {
-  if (process.env.DATABASE_SSL === "disable") {
-    return undefined;
-  }
-
-  const shouldUseSsl =
-    process.env.DATABASE_SSL === "require" || connectionString.includes("neon.tech");
-
+  const shouldUseSsl = connectionString.includes("neon.tech");
   return shouldUseSsl ? { rejectUnauthorized: false } : undefined;
 }
 
