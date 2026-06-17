@@ -21,46 +21,46 @@ uniform vec2 u_resolution;
 uniform float u_time;
 
 mat2 r2d(float a) {
-  float c = cos(a);
-  float s = sin(a);
+  float c = cos(a), s = sin(a);
   return mat2(c, s, -s, c);
 }
 
-float hash31(vec3 p) {
-  p = fract(p * 0.1031);
-  p += dot(p, p.yzx + 33.33);
-  return fract((p.x + p.y) * p.z);
+// ── Procedural 2D noise that replaces ShaderToy iChannel0 texture ──
+// Bilinear-interpolated hash, tiled at 256 so patterns stay coherent.
+float hash2d(vec2 p) {
+  p = mod(p, 256.0);
+  p = fract(p * vec2(0.1031, 0.1030));
+  p += dot(p, p.yx + 33.33);
+  return fract((p.x + p.y) * p.x);
 }
 
-float noise3(vec3 x) {
+float noiseLayer(vec2 uv) {
+  vec2 i = floor(uv);
+  vec2 f = fract(uv);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash2d(i),              hash2d(i + vec2(1.0, 0.0)), f.x),
+    mix(hash2d(i + vec2(0.0, 1.0)), hash2d(i + vec2(1.0, 1.0)), f.x),
+    f.y
+  );
+}
+
+// Matches iq's texture-based noise from the original ShaderToy.
+// Returns ~[-8, -5.6] — the consistently-negative range is what creates
+// the dense volumetric cloud around the crystal.
+float noise(vec3 x) {
   vec3 p = floor(x);
   vec3 f = fract(x);
-  f = f * f * (3.0 - 2.0 * f);
-
-  float n000 = hash31(p + vec3(0.0, 0.0, 0.0));
-  float n100 = hash31(p + vec3(1.0, 0.0, 0.0));
-  float n010 = hash31(p + vec3(0.0, 1.0, 0.0));
-  float n110 = hash31(p + vec3(1.0, 1.0, 0.0));
-  float n001 = hash31(p + vec3(0.0, 0.0, 1.0));
-  float n101 = hash31(p + vec3(1.0, 0.0, 1.0));
-  float n011 = hash31(p + vec3(0.0, 1.0, 1.0));
-  float n111 = hash31(p + vec3(1.0, 1.0, 1.0));
-
-  float nx00 = mix(n000, n100, f.x);
-  float nx10 = mix(n010, n110, f.x);
-  float nx01 = mix(n001, n101, f.x);
-  float nx11 = mix(n011, n111, f.x);
-  float nxy0 = mix(nx00, nx10, f.y);
-  float nxy1 = mix(nx01, nx11, f.y);
-  return mix(nxy0, nxy1, f.z) * 2.0 - 1.0;
+  f = f * f * (5.0 - 3.0 * f);
+  vec2 uv0 = p.xy + vec2(37.0, 17.0) * p.z       + f.xy;
+  vec2 uv1 = p.xy + vec2(37.0, 17.0) * (p.z + 1.0) + f.xy;
+  return -8.0 + 2.4 * mix(noiseLayer(uv0), noiseLayer(uv1), f.z);
 }
 
 float fbm(vec3 p) {
-  float total = 0.0;
-  total += noise3(p * 0.75) * 0.55;
-  total += noise3(p * 1.6) * 0.25;
-  total += noise3(p * 3.4) * 0.12;
-  return total;
+  return noise(p * 0.06125) * 0.5
+       + noise(p * 0.125)   * 0.25
+       + noise(p * 0.25)    * 0.125;
 }
 
 vec3 fold(vec3 p) {
@@ -74,17 +74,17 @@ vec3 fold(vec3 p) {
 
 float sdfCrystal(vec3 p, float scale) {
   vec3 fp = fold(p * scale);
-  float crystal = dot(fp, normalize(sign(fp) + 0.001)) - 0.1;
-  crystal -= sin(fp.y * 0.35) * 1.6;
-  crystal -= sin(fp.y * 0.9) * 0.55;
-  crystal += min(fp.x * 0.9, sin(fp.y * 0.38));
-
-  fp = fold(fp) - vec3(0.2, 0.57, -0.2);
+  // Matches original exactly — larger low-freq ripples produce the full flower shape
+  float crystal = dot(fp, normalize(sign(fp) + 0.001)) - 0.1
+                - sin(fp.y * 0.2) * 2.0
+                - sin(fp.y * 0.7) * 1.0;
+  crystal += min(fp.x * 1.0, sin(fp.y * 0.3));
+  fp = fold(fp) - vec3( 0.2,  0.57, -0.2);
   fp = fold(fp) - vec3(-0.14, 0.99, -2.4);
-  fp = fold(fp) - vec3(-0.03, 1.0, -0.3);
-  fp = fold(fp) - vec3(0.0, 0.26, 0.0);
-  crystal += sin(fp.y * 0.24) * 3.0;
-  crystal *= 0.62;
+  fp = fold(fp) - vec3(-0.03, 1.0,  -0.3);
+  fp = fold(fp) - vec3( 0.0,  0.26,  0.0);
+  crystal += sin(fp.y * 0.18) * 5.0;
+  crystal *= 0.6;
   return crystal / scale;
 }
 
@@ -92,74 +92,82 @@ float sdfMask(vec3 p) {
   p.x = abs(p.x) - 0.28;
   p.xz *= r2d(0.56);
   p.xy *= r2d(-0.01);
-  return sdfCrystal(p, 2.75);
+  return sdfCrystal(p, 3.0);
 }
 
 float de(vec3 p) {
-  p.xy *= r2d(sin(u_time * 0.45) * 0.22);
-  p.xz *= r2d(sin(u_time * 0.8) * 0.14 + 0.55);
-  p.xy *= r2d(sin(sin(u_time * 0.6) * 2.0) * 0.18);
-  p.x += sin(u_time * 0.65) * 0.26;
-  return sdfMask(p * 0.92) / 0.92 + fbm(p * 4.8) * 0.16;
+  // Original animation — large horizontal sway is key to the look
+  p.xy *= r2d(sin(u_time) * 0.3);
+  p.xz *= r2d(sin(u_time * 2.0) * 0.12);
+  p.xy *= r2d(sin(sin(u_time * 2.0) * 2.0) * 0.2);
+  p.x  += sin(u_time * 2.0) * 0.9;
+  // p * 0.1 makes the crystal 10× larger in world space — matches original
+  return sdfMask(p * 0.1) / 0.1 + fbm(p * 35.0) * 0.1;
 }
 
 vec3 camera(vec3 ro, vec3 ta, vec2 uv) {
-  vec3 fwd = normalize(ta - ro);
+  vec3 fwd  = normalize(ta - ro);
   vec3 left = normalize(cross(vec3(0.0, 1.0, 0.0), fwd));
-  vec3 up = normalize(cross(fwd, left));
-  return normalize(fwd + uv.x * left + uv.y * up);
+  vec3 up   = normalize(cross(fwd, left));
+  return normalize(fwd + uv.x * left + up * uv.y);
 }
 
-float raymarch(vec3 rayOri, vec2 uv, vec3 tint) {
-  vec3 target = vec3(0.0);
-  vec3 rayDir = camera(rayOri, target, uv);
-  vec3 pos = rayOri;
+float raymarch(vec3 rayOri, vec2 uv) {
+  vec3 rayDir = camera(rayOri, vec3(0.0), uv);
+  vec3 pos    = rayOri;
 
-  float lastDensity = 0.0;
-  vec4 sum = vec4(0.0);
-  float tdist = 0.0;
+  float ldensity = 0.0;
+  vec4  sum      = vec4(0.0);
+  float tdist    = 0.0;
+  float dist     = 0.0; // checked at top of loop (previous step's clamped dist)
 
-  for (int i = 0; i < 52; i++) {
-    if (tdist > 12.0 || sum.a > 0.96) {
-      break;
-    }
+  for (int i = 0; i < 64; i++) {
+    if (dist < tdist * 0.001 || tdist > 25.0 || sum.a > 0.95) break;
 
-    float dist = de(pos) * 0.55;
-    float density = max(0.075 - dist, 0.0);
-    density *= 0.58;
+    dist     = de(pos) * 0.59;
+    ldensity = (0.05 - dist) * step(dist, 0.05);
 
-    vec4 col = vec4(tint * density, density);
-    sum += (1.0 - sum.a) * col;
+    vec4 col = vec4(1.0);
+    col.a    = ldensity;
+    col.rgb *= col.a;
+    sum      += (1.0 - sum.a) * col;
+    sum.a    += 0.004; // base atmospheric scatter
 
-    lastDensity = density;
-    dist = max(dist, 0.04);
-    pos += dist * rayDir;
+    dist  = max(dist, 0.03);
+    pos   += dist * rayDir;
     tdist += dist;
   }
 
-  sum.rgb *= 1.35 / exp(lastDensity * 3.8);
-  return dot(sum.rgb, vec3(0.299, 0.587, 0.114)) + sum.a * 0.12;
+  sum   *= 1.0 / exp(ldensity * 3.0) * 1.25;
+  sum.r  = pow(max(sum.r, 0.0), 2.15);
+  return sum.r;
+}
+
+float hash31(vec3 p) {
+  p = fract(p * 0.1031);
+  p += dot(p, p.yzx + 33.33);
+  return fract((p.x + p.y) * p.z);
 }
 
 void main() {
-  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
-  uv *= 1.1;
+  // Aspect-correct UV matching the original exactly
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy - 0.5;
+  uv.x   *= u_resolution.x / u_resolution.y;
 
-  float rotationDelta = 1.57;
-  float zDst = -8.8;
+  float rotDelta = 1.57;
+  float zDst     = -19.5; // original camera distance
 
-  vec3 roRed = vec3(zDst * cos(rotationDelta - 0.02), 0.0, zDst * sin(rotationDelta - 0.02));
-  vec3 roCyan = vec3(zDst * cos(rotationDelta + 0.02), 0.0, zDst * sin(rotationDelta + 0.02));
+  vec3 ro1 = vec3(zDst * cos(rotDelta - 0.02), 0.0, zDst * sin(rotDelta - 0.02));
+  vec3 ro2 = vec3(zDst * cos(rotDelta + 0.02), 0.0, zDst * sin(rotDelta + 0.02));
 
-  float red = raymarch(roRed, uv, vec3(0.95, 0.22, 0.28));
-  float cyan = raymarch(roCyan, uv, vec3(0.32, 0.84, 0.95));
+  float red  = raymarch(ro1, uv);
+  float cyan = raymarch(ro2, uv);
 
-  vec3 color = vec3(red, cyan * 0.94, cyan);
+  vec3  color    = vec3(red, cyan * 0.94, cyan);
+  float grain    = hash31(vec3(gl_FragCoord.xy, floor(u_time * 12.0))) * 0.025;
   float vignette = smoothstep(0.92, 0.14, length(uv));
-  float grain = hash31(vec3(gl_FragCoord.xy, floor(u_time * 12.0))) * 0.025;
 
   color *= vignette;
-  color += vec3(0.02, 0.024, 0.03) * vignette;
   color += grain;
 
   float alpha = clamp(max(max(color.r, color.g), color.b) * 1.45 + vignette * 0.1, 0.0, 1.0);
@@ -300,7 +308,7 @@ export function ShaderLogo({ className = "" }: ShaderLogoProps) {
 
     return (
         <span
-            className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[1.1rem] border border-line bg-black shadow-[0_14px_34px_rgba(0,0,0,0.45)] ${className}`}
+            className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-black shadow-[0_14px_34px_rgba(0,0,0,0.45)] ${className}`}
             aria-hidden="true"
         >
             <canvas ref={canvasRef} className="h-full w-full" />
