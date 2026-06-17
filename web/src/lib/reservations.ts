@@ -1,7 +1,6 @@
 import "server-only";
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { Pool } from "pg";
 import type { ContactChannel } from "@/lib/data";
 
 export type ReservationInput = {
@@ -33,9 +32,19 @@ export type OutboundMessageJob = {
   createdAt: string;
 };
 
-const storageDir = path.join(process.cwd(), ".data");
-const reservationsFilePath = path.join(storageDir, "reservations.json");
-const outboundMessagesFilePath = path.join(storageDir, "outbound-messages.json");
+export type ReservationAdminListItem = ReservationRecord & {
+  outboundStatus: OutboundMessageJob["status"] | null;
+  outboundProviderHint: OutboundMessageJob["providerHint"] | null;
+  outboundMessageBody: string | null;
+  outboundDispatchNote: string | null;
+};
+
+type GlobalDatabaseState = typeof globalThis & {
+  __reservationPool?: Pool;
+  __reservationSchemaPromise?: Promise<void>;
+};
+
+const globalDatabaseState = globalThis as GlobalDatabaseState;
 
 function isContactChannel(value: string): value is ContactChannel {
   return value === "whatsapp" || value === "telegram" || value === "email";
@@ -109,30 +118,85 @@ function buildAutomaticMessage(reservation: ReservationRecord) {
   return `Hola ${reservation.name}, recibimos tu reserva para ${reservation.eventTitle}. En breve te confirmamos disponibilidad por este medio.`;
 }
 
-async function ensureStorageFile(filePath: string) {
-  await mkdir(storageDir, { recursive: true });
+function getDatabaseConnectionString() {
+  const connectionString = process.env.DATABASE_URL;
 
-  try {
-    await readFile(filePath, "utf8");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      await writeFile(filePath, "[]\n", "utf8");
-      return;
-    }
-
-    throw error;
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL no esta configurada. Levanta Postgres con Docker Compose y configura web/.env.local.",
+    );
   }
+
+  return connectionString;
 }
 
-async function readStorageFile<T>(filePath: string) {
-  await ensureStorageFile(filePath);
-  const fileContents = await readFile(filePath, "utf8");
-  return JSON.parse(fileContents) as T[];
+function getDatabaseSsl(connectionString: string) {
+  if (process.env.DATABASE_SSL === "disable") {
+    return undefined;
+  }
+
+  const shouldUseSsl =
+    process.env.DATABASE_SSL === "require" || connectionString.includes("neon.tech");
+
+  return shouldUseSsl ? { rejectUnauthorized: false } : undefined;
 }
 
-async function writeStorageFile<T>(filePath: string, items: T[]) {
-  await ensureStorageFile(filePath);
-  await writeFile(filePath, `${JSON.stringify(items, null, 2)}\n`, "utf8");
+function getPool() {
+  if (!globalDatabaseState.__reservationPool) {
+    const connectionString = getDatabaseConnectionString();
+
+    globalDatabaseState.__reservationPool = new Pool({
+      connectionString,
+      ssl: getDatabaseSsl(connectionString),
+    });
+  }
+
+  return globalDatabaseState.__reservationPool;
+}
+
+async function ensureDatabaseSchema() {
+  if (!globalDatabaseState.__reservationSchemaPromise) {
+    const pool = getPool();
+
+    globalDatabaseState.__reservationSchemaPromise = (async () => {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS reservations (
+          id UUID PRIMARY KEY,
+          event_slug TEXT NOT NULL,
+          event_title TEXT NOT NULL,
+          name TEXT NOT NULL,
+          channel TEXT NOT NULL,
+          contact_value TEXT NOT NULL,
+          contact_url TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS outbound_messages (
+          id UUID PRIMARY KEY,
+          reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
+          event_slug TEXT NOT NULL,
+          event_title TEXT NOT NULL,
+          channel TEXT NOT NULL,
+          destination TEXT NOT NULL,
+          destination_url TEXT,
+          provider_hint TEXT NOT NULL,
+          status TEXT NOT NULL,
+          message_body TEXT NOT NULL,
+          dispatch_note TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS outbound_messages_status_created_at_idx
+        ON outbound_messages (status, created_at DESC)
+      `);
+    })();
+  }
+
+  await globalDatabaseState.__reservationSchemaPromise;
 }
 
 export function validateReservationInput(payload: unknown): ReservationInput {
@@ -196,6 +260,8 @@ export async function createReservation(
   input: ReservationInput,
   eventTitle: string,
 ): Promise<ReservationRecord> {
+  await ensureDatabaseSchema();
+
   const reservation: ReservationRecord = {
     ...input,
     id: crypto.randomUUID(),
@@ -204,9 +270,30 @@ export async function createReservation(
     createdAt: new Date().toISOString(),
   };
 
-  const reservations = await readStorageFile<ReservationRecord>(reservationsFilePath);
-  reservations.unshift(reservation);
-  await writeStorageFile(reservationsFilePath, reservations);
+  await getPool().query(
+    `
+      INSERT INTO reservations (
+        id,
+        event_slug,
+        event_title,
+        name,
+        channel,
+        contact_value,
+        contact_url,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `,
+    [
+      reservation.id,
+      reservation.eventSlug,
+      reservation.eventTitle,
+      reservation.name,
+      reservation.channel,
+      reservation.contactValue,
+      reservation.contactUrl ?? null,
+      reservation.createdAt,
+    ],
+  );
 
   return reservation;
 }
@@ -214,6 +301,8 @@ export async function createReservation(
 export async function queueAutomaticMessage(
   reservation: ReservationRecord,
 ): Promise<OutboundMessageJob> {
+  await ensureDatabaseSchema();
+
   const outboundMessage: OutboundMessageJob = {
     id: crypto.randomUUID(),
     reservationId: reservation.id,
@@ -229,9 +318,103 @@ export async function queueAutomaticMessage(
     createdAt: new Date().toISOString(),
   };
 
-  const outboundMessages = await readStorageFile<OutboundMessageJob>(outboundMessagesFilePath);
-  outboundMessages.unshift(outboundMessage);
-  await writeStorageFile(outboundMessagesFilePath, outboundMessages);
+  await getPool().query(
+    `
+      INSERT INTO outbound_messages (
+        id,
+        reservation_id,
+        event_slug,
+        event_title,
+        channel,
+        destination,
+        destination_url,
+        provider_hint,
+        status,
+        message_body,
+        dispatch_note,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `,
+    [
+      outboundMessage.id,
+      outboundMessage.reservationId,
+      outboundMessage.eventSlug,
+      outboundMessage.eventTitle,
+      outboundMessage.channel,
+      outboundMessage.destination,
+      outboundMessage.destinationUrl ?? null,
+      outboundMessage.providerHint,
+      outboundMessage.status,
+      outboundMessage.messageBody,
+      outboundMessage.dispatchNote,
+      outboundMessage.createdAt,
+    ],
+  );
 
   return outboundMessage;
+}
+
+export async function listReservations(limit = 100): Promise<ReservationAdminListItem[]> {
+  await ensureDatabaseSchema();
+
+  const result = await getPool().query<{
+    id: string;
+    event_slug: string;
+    event_title: string;
+    name: string;
+    channel: ContactChannel;
+    contact_value: string;
+    contact_url: string | null;
+    created_at: string;
+    outbound_status: OutboundMessageJob["status"] | null;
+    outbound_provider_hint: OutboundMessageJob["providerHint"] | null;
+    outbound_message_body: string | null;
+    outbound_dispatch_note: string | null;
+  }>(
+    `
+      SELECT
+        r.id,
+        r.event_slug,
+        r.event_title,
+        r.name,
+        r.channel,
+        r.contact_value,
+        r.contact_url,
+        r.created_at,
+        om.status AS outbound_status,
+        om.provider_hint AS outbound_provider_hint,
+        om.message_body AS outbound_message_body,
+        om.dispatch_note AS outbound_dispatch_note
+      FROM reservations r
+      LEFT JOIN LATERAL (
+        SELECT
+          outbound_messages.status,
+          outbound_messages.provider_hint,
+          outbound_messages.message_body,
+          outbound_messages.dispatch_note
+        FROM outbound_messages
+        WHERE outbound_messages.reservation_id = r.id
+        ORDER BY outbound_messages.created_at DESC
+        LIMIT 1
+      ) om ON TRUE
+      ORDER BY r.created_at DESC
+      LIMIT $1
+    `,
+    [limit],
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    eventSlug: row.event_slug,
+    eventTitle: row.event_title,
+    name: row.name,
+    channel: row.channel,
+    contactValue: row.contact_value,
+    contactUrl: row.contact_url ?? undefined,
+    createdAt: row.created_at,
+    outboundStatus: row.outbound_status,
+    outboundProviderHint: row.outbound_provider_hint,
+    outboundMessageBody: row.outbound_message_body,
+    outboundDispatchNote: row.outbound_dispatch_note,
+  }));
 }

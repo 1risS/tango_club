@@ -15,12 +15,12 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 
     if (!event) {
         return {
-            title: "Evento no encontrado | Baires Tango Club",
+            title: "Evento no encontrado | La Yunta",
         };
     }
 
     return {
-        title: `${event.title} | Baires Tango Club`,
+        title: `${event.title} | La Yunta`,
         description: event.excerpt,
     };
 }
@@ -34,62 +34,113 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     }
 
     return (
-        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 pb-16 pt-6 md:px-8 md:pb-24">
-            <section className="overflow-hidden rounded-[2rem] border border-line bg-panel">
-                <div className="flex min-h-[260px] items-center justify-center px-6 py-10 text-center text-2xl font-medium text-muted md:min-h-[420px] md:text-4xl">
-                    imagen del evento 16:9
-                </div>
-            </section>
-
-            <section className="mt-8 grid overflow-hidden rounded-[2rem] border border-line bg-line xl:grid-cols-[1fr_0.95fr]">
-                <article className="bg-surface px-6 py-8 md:px-10 md:py-12">
-                    <p className="text-lg font-semibold text-muted">{event.dateLabel}</p>
-                    <h1 className="mt-6 max-w-xl text-5xl font-semibold tracking-tight md:text-7xl">
-                        {event.title}
-                    </h1>
-
-                    <section className="mt-10">
-                        <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
-                            Descripcion extendida
-                        </h2>
-                        <p className="mt-5 max-w-2xl text-lg leading-8 text-muted md:text-2xl md:leading-10">
-                            {event.description}
+        <>
+            {/* ── Cinematic hero: full-bleed, no rounded corners, no glass card ── */}
+            <div
+                className="relative w-full overflow-hidden bg-panel"
+                style={{ height: "clamp(200px, 44vh, 540px)" }}
+            >
+                {/* atmospheric warm glows */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background:
+                            "radial-gradient(circle at 20% 60%, rgba(140,25,40,0.32), transparent 44%), radial-gradient(circle at 78% 28%, rgba(165,125,38,0.2), transparent 36%)",
+                    }}
+                />
+                {/* fade to background at bottom so content merges */}
+                <div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(to top, var(--background) 0%, transparent 55%)" }}
+                />
+                {/* date + neighborhood overlaid at bottom-left */}
+                <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 md:px-8 md:pb-7">
+                    <div className="mx-auto max-w-7xl">
+                        <p className="eyebrow text-[0.62rem] tracking-[0.42em] text-foreground/40">
+                            {event.dateLabel} · {event.neighborhood}
                         </p>
-                    </section>
+                    </div>
+                </div>
+            </div>
 
-                    <section className="mt-10">
-                        <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
-                            Caracteristicas
-                        </h2>
-                        <ul className="mt-6 space-y-4 p-0 text-lg text-muted md:text-2xl">
-                            {event.features.map((feature) => (
-                                <li key={feature.label} className="flex items-center gap-4">
-                                    <span
-                                        className={`h-4 w-4 rounded-full ${feature.tone === "positive" ? "bg-success" : "bg-danger"
-                                            }`}
-                                    />
-                                    <span>{feature.label}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
+            {/* ── Editorial content: no glass boxes ── */}
+            <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 pb-16 md:px-8 md:pb-24">
+                {/* tags row */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-line py-4">
+                    {event.tags.map((tag) => (
+                        <span
+                            key={tag}
+                            className="liquid-chip rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.22em] text-muted"
+                        >
+                            {tag}
+                        </span>
+                    ))}
+                </div>
 
-                    <section className="mt-10">
-                        <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">Ubicacion</h2>
-                        <p className="mt-5 text-lg text-muted md:text-2xl">{event.location}</p>
-                        <div className="mx-auto mt-5 flex min-h-60 w-full max-w-[32rem] items-center justify-center rounded-[1.75rem] border border-line bg-panel text-3xl font-medium text-muted xl:mx-0 xl:max-w-none">
-                            mini mapa
-                        </div>
-                    </section>
-                </article>
+                {/* Two-column: editorial article + sticky reservation */}
+                <div className="grid xl:grid-cols-[1fr_20rem]">
+                    {/* ── Left: open typographic content ── */}
+                    <article className="py-10 xl:pr-14 md:py-14">
+                        {/* Architectural title */}
+                        <h1 className="anim-up anim-delay-100 font-display italic text-[3rem] leading-[0.92] tracking-[-0.03em] text-foreground md:text-[4.6rem] xl:text-[5.6rem]">
+                            {event.title}
+                        </h1>
 
-                <aside className="bg-panel px-6 py-8 md:px-10 md:py-12">
-                    <ReservationForm
-                        eventSlug={event.slug}
-                        reservationNote={event.reservationNote}
-                    />
-                </aside>
-            </section>
-        </main>
+                        {/* Description */}
+                        <section className="scroll-reveal mt-12 border-t border-line pt-10">
+                            <p className="eyebrow mb-5 text-[0.6rem] tracking-[0.4em] text-accent-red">
+                                Sobre la noche
+                            </p>
+                            <p className="max-w-prose text-lg leading-8 text-muted md:text-xl md:leading-9">
+                                {event.description}
+                            </p>
+                        </section>
+
+                        {/* Features */}
+                        <section className="scroll-reveal mt-10 border-t border-line pt-10">
+                            <p className="eyebrow mb-6 text-[0.6rem] tracking-[0.4em] text-accent-red">
+                                Ambiente
+                            </p>
+                            <ul className="space-y-3.5">
+                                {event.features.map((feature) => (
+                                    <li
+                                        key={feature.label}
+                                        className="flex items-baseline gap-3 text-base text-muted md:text-lg"
+                                    >
+                                        <span
+                                            className={`mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full ${feature.tone === "positive" ? "bg-success" : "bg-danger"
+                                                }`}
+                                        />
+                                        {feature.label}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+
+                        {/* Location */}
+                        <section className="scroll-reveal mt-10 border-t border-line pt-10">
+                            <p className="eyebrow mb-4 text-[0.6rem] tracking-[0.4em] text-accent-red">
+                                Dónde
+                            </p>
+                            <p className="text-base text-muted md:text-lg">{event.location}</p>
+                            <div className="mt-6 flex min-h-44 items-center justify-center rounded-lg border border-line bg-panel text-sm text-muted/40">
+                                mapa
+                            </div>
+                        </section>
+                    </article>
+
+                    {/* ── Right: sticky reservation column ── */}
+                    <aside className="anim-in anim-delay-400 border-t border-line py-8 xl:sticky xl:top-20 xl:self-start xl:border-t-0 xl:border-l xl:border-line xl:pl-10 xl:pt-14 xl:pb-16">
+                        <p className="eyebrow mb-6 text-[0.6rem] tracking-[0.4em] text-accent-red">
+                            Reservar
+                        </p>
+                        <ReservationForm
+                            eventSlug={event.slug}
+                            reservationNote={event.reservationNote}
+                        />
+                    </aside>
+                </div>
+            </main>
+        </>
     );
 }

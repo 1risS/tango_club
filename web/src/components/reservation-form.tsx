@@ -106,75 +106,85 @@ export function ReservationForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-[34rem] flex-col gap-8">
-            <div>
-                <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">
-                    Datos para la reserva
-                </h2>
-            </div>
-
-            <label className="flex w-full flex-col gap-3 text-2xl font-semibold text-foreground">
-                <span>Nombre</span>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Name */}
+            <div className="flex flex-col gap-2">
+                <label
+                    className="eyebrow text-[0.6rem] tracking-[0.34em] text-muted"
+                    htmlFor="res-name"
+                >
+                    Nombre
+                </label>
                 <input
+                    id="res-name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="nombre completo"
-                    className="min-h-16 w-full rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-5 text-xl font-medium text-[#2a2a28] outline-none transition placeholder:text-[#4b4b46] focus:border-foreground"
+                    placeholder="Tu nombre completo"
+                    className="liquid-input rounded-lg px-4 py-3 text-base font-medium transition"
                 />
-            </label>
+            </div>
 
-            <fieldset className="m-0 min-w-0 border-0 p-0">
-                <legend className="max-w-sm px-0 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-                    Canal de comunicacion de preferencia
-                </legend>
-                <div className="flex flex-col gap-4 pt-10 text-xl text-muted md:text-2xl">
+            {/* Channel — editorial tab selector, no radio buttons */}
+            <div className="flex flex-col gap-3">
+                <span className="eyebrow text-[0.6rem] tracking-[0.34em] text-muted">
+                    Cómo te contactamos
+                </span>
+                <div role="tablist" className="flex border-b border-line">
                     {channelOptions.map((option) => (
-                        <label key={option.value} className="flex items-center gap-4">
-                            <input
-                                type="radio"
-                                name="channel"
-                                value={option.value}
-                                checked={channel === option.value}
-                                onChange={() => setChannel(option.value)}
-                                className="h-6 w-6 accent-[#efede6]"
-                            />
-                            <span>{option.label}</span>
-                        </label>
+                        <button
+                            key={option.value}
+                            role="tab"
+                            type="button"
+                            aria-selected={channel === option.value}
+                            onClick={() => setChannel(option.value)}
+                            className={`relative mr-5 pb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition-colors last:mr-0 ${channel === option.value
+                                    ? "text-foreground"
+                                    : "text-muted hover:text-foreground/60"
+                                }`}
+                        >
+                            {option.label}
+                            {channel === option.value && (
+                                <span className="absolute inset-x-0 -bottom-px h-px bg-accent" />
+                            )}
+                        </button>
                     ))}
                 </div>
-            </fieldset>
+            </div>
 
-            <div className="flex flex-col gap-3">
-                <p className="text-sm text-muted">
-                    {expectsTelegram
-                        ? "Si elegis Telegram, dejanos tu usuario. Podes escribirlo como irisR, @irisR o pegar la URL completa."
-                        : reservationNote}
-                </p>
+            {/* Contact value */}
+            <div className="flex flex-col gap-2">
+                <label className="eyebrow text-[0.6rem] tracking-[0.34em] text-muted">
+                    {expectsEmail
+                        ? "Correo electrónico"
+                        : expectsTelegram
+                            ? "Usuario de Telegram"
+                            : "Número de WhatsApp"}
+                </label>
                 {expectsEmail ? (
                     <input
                         value={contactValue}
                         onChange={(event) => setContactValue(event.target.value)}
                         placeholder="mail@ejemplo.com"
-                        className="min-h-16 w-full rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-5 text-xl font-medium text-[#2a2a28] outline-none transition placeholder:text-[#4b4b46] focus:border-foreground"
+                        className="liquid-input rounded-lg px-4 py-3 text-base font-medium transition"
                     />
                 ) : expectsTelegram ? (
-                    <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] gap-3">
-                        <div className="flex min-h-16 items-center justify-center rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-3 text-lg font-medium text-[#4b4b46] sm:text-xl">
+                    <div className="grid grid-cols-[4.5rem_1fr] gap-2">
+                        <div className="liquid-input flex items-center justify-center rounded-lg px-3 py-3 text-sm font-medium text-muted">
                             t.me/
                         </div>
                         <input
                             value={contactValue}
                             onChange={(event) => setContactValue(event.target.value)}
                             placeholder="tu_usuario"
-                            className="min-h-16 min-w-0 w-full rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-4 text-lg font-medium text-[#2a2a28] outline-none transition placeholder:text-[#4b4b46] focus:border-foreground sm:px-5 sm:text-xl"
+                            className="liquid-input min-w-0 rounded-lg px-4 py-3 text-base font-medium transition"
                         />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-[8.5rem_minmax(0,1fr)] gap-3">
+                    <div className="grid grid-cols-[7rem_1fr] gap-2">
                         <select
                             value={countryCode}
                             onChange={(event) => setCountryCode(event.target.value)}
-                            className="min-h-16 w-full rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-4 text-lg font-medium text-[#2a2a28] outline-none transition focus:border-foreground sm:px-5 sm:text-xl"
+                            className="liquid-input rounded-lg px-3 py-3 text-sm font-medium transition"
                         >
                             {countryCodes.map((option) => (
                                 <option key={option.value} value={option.value}>
@@ -186,31 +196,39 @@ export function ReservationForm({
                             value={contactValue}
                             onChange={(event) => setContactValue(event.target.value)}
                             placeholder="11 1234 5678"
-                            className="min-h-16 min-w-0 w-full rounded-[1.25rem] border border-[#e5e1d6] bg-[#f4f1eb] px-4 text-lg font-medium text-[#2a2a28] outline-none transition placeholder:text-[#4b4b46] focus:border-foreground sm:px-5 sm:text-xl"
+                            className="liquid-input min-w-0 rounded-lg px-4 py-3 text-base font-medium transition"
                         />
                     </div>
                 )}
-                {expectsWhatsapp ? (
-                    <p className="text-sm text-muted">Vamos a usar este numero solo para confirmar la reserva.</p>
+                {expectsTelegram ? (
+                    <p className="text-xs leading-5 text-muted">
+                        Podés escribirlo como usuario, @usuario o pegar la URL completa.
+                    </p>
+                ) : expectsWhatsapp ? (
+                    <p className="text-xs leading-5 text-muted">
+                        Solo usaremos este número para confirmar tu reserva.
+                    </p>
+                ) : reservationNote ? (
+                    <p className="text-xs leading-5 text-muted">{reservationNote}</p>
                 ) : null}
             </div>
 
             <button
                 type="submit"
                 disabled={!formIsValid || isPending}
-                className="inline-flex min-h-16 w-full items-center justify-center rounded-[1.35rem] border border-[#efede6] bg-[#f4f1eb] px-8 text-2xl font-semibold text-[#2a2a28] transition disabled:cursor-not-allowed disabled:border-[#d7d7d5] disabled:bg-button-disabled disabled:text-[#c8c5bc] enabled:hover:bg-[#e7e1d5]"
+                className="liquid-button liquid-button-primary mt-1 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-8 text-[0.72rem] font-semibold uppercase tracking-[0.26em] transition disabled:cursor-not-allowed disabled:opacity-40"
             >
-                {isPending ? "Enviando..." : "Reservar"}
+                {isPending ? "Enviando…" : "Confirmar reserva"}
             </button>
 
             {submissionState.error ? (
-                <p className="rounded-[1.25rem] border border-danger/40 bg-danger/10 px-4 py-3 text-base text-[#ffd8d4]">
+                <p className="rounded-lg border border-danger/30 bg-danger/8 px-4 py-3 text-sm text-foreground/80">
                     {submissionState.error}
                 </p>
             ) : null}
 
             {submissionState.success ? (
-                <p className="rounded-[1.25rem] border border-success/40 bg-success/10 px-4 py-3 text-base text-[#d8ffdb]">
+                <p className="rounded-lg border border-success/30 bg-success/8 px-4 py-3 text-sm text-foreground/80">
                     {submissionState.success}
                 </p>
             ) : null}

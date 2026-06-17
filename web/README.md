@@ -1,17 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) app for Baires Tango Club.
+
+## Local database
+
+The reservation flow now persists to PostgreSQL through `DATABASE_URL`.
+
+Start the local database from the repository root:
+
+```bash
+docker compose up -d
+```
+
+The app already includes a local example connection in `web/.env.local`:
+
+```bash
+DATABASE_URL=postgresql://omen_app:omen_local_dev@localhost:5432/omen_tango_club
+DATABASE_SSL=disable
+ADMIN_USERNAME=iris
+ADMIN_PASSWORD=cambiar-este-password
+ADMIN_SESSION_SECRET=cambiar-esta-clave-de-sesion
+```
+
+When you later move to Neon, replace `DATABASE_URL` with the Neon connection string and set `DATABASE_SSL=require` if needed.
+
+## Admin privado
+
+There is a protected admin area at `/admin`.
+
+- Login page: `/admin/login`
+- Credentials come from `ADMIN_USERNAME`, `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`
+- Successful login creates an `httpOnly` cookie so the reservations dashboard stays private
 
 ## Getting Started
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

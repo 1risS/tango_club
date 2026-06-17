@@ -1,18 +1,21 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #2f2f2b;
-  --foreground: #efede6;
-  --panel: #232321;
-  --surface: #34342f;
-  --line: #4b4b46;
-  --muted: #a5a195;
-  --brand-muted: #75756d;
-  --button: #74746d;
-  --button-active: #21211f;
-  --button-disabled: #d7d7d5;
-  --success: #37f643;
-  --danger: #ff2d20;
+  --background: #080605;
+  --foreground: #ede9e0;
+  --panel: #0e0b0a;
+  --surface: #151211;
+  --line: #2e2824;
+  --muted: #7a7068;
+  --brand-muted: #574e47;
+  --button: #ede9e0;
+  --button-active: #f5ede0;
+  --button-disabled: #4d4540;
+  --accent: #b5283b;
+  --accent-soft: #1c0509;
+  --accent-red: #c49240;
+  --success: #4fb96e;
+  --danger: #e05050;
 }
 
 @theme inline {
@@ -26,6 +29,9 @@
   --color-button: var(--button);
   --color-button-active: var(--button-active);
   --color-button-disabled: var(--button-disabled);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-red: var(--accent-red);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --font-sans: var(--font-manrope);
@@ -36,19 +42,72 @@
 }
 
 html {
+  scroll-behavior: smooth;
   background: radial-gradient(
-      circle at top left,
-      rgba(255, 255, 255, 0.06),
-      transparent 26%
+      ellipse at 14% 10%,
+      rgba(150, 30, 45, 0.1),
+      transparent 28%
     ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 22%),
+    radial-gradient(
+      ellipse at 84% 8%,
+      rgba(170, 130, 50, 0.07),
+      transparent 24%
+    ),
+    linear-gradient(180deg, rgba(237, 220, 200, 0.025), rgba(255, 255, 255, 0)),
     var(--background);
 }
 
 body {
-  background: var(--background);
+  min-height: 100%;
+  position: relative;
+  isolation: isolate;
+  background: transparent;
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background: radial-gradient(
+      circle at 12% 14%,
+      rgba(140, 22, 38, 0.22),
+      transparent 18%
+    ),
+    radial-gradient(circle at 22% 68%, rgba(130, 85, 22, 0.14), transparent 20%),
+    radial-gradient(circle at 84% 12%, rgba(160, 32, 48, 0.18), transparent 17%),
+    radial-gradient(circle at 76% 68%, rgba(175, 140, 52, 0.1), transparent 16%),
+    radial-gradient(
+      circle at 50% 36%,
+      rgba(195, 150, 65, 0.07),
+      transparent 22%
+    );
+  filter: blur(88px);
+  opacity: 1;
+  animation: liquid-drift 28s ease-in-out infinite alternate;
+}
+
+body::after {
+  background: linear-gradient(
+      135deg,
+      rgba(237, 220, 200, 0.05),
+      transparent 28%
+    ),
+    linear-gradient(320deg, rgba(150, 80, 30, 0.04), transparent 26%),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(237, 220, 200, 0.02),
+      transparent 50%
+    ),
+    linear-gradient(180deg, rgba(237, 220, 200, 0.02), rgba(8, 6, 5, 0));
+  opacity: 1;
 }
 
 a {
@@ -64,7 +123,7 @@ textarea {
 }
 
 ::selection {
-  background: rgba(239, 237, 230, 0.2);
+  background: rgba(181, 40, 59, 0.28);
 }
 
 summary {
@@ -73,4 +132,289 @@ summary {
 
 summary::-webkit-details-marker {
   display: none;
+}
+
+.font-display {
+  font-family: var(--font-cormorant), serif;
+}
+
+.eyebrow {
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* ── page-level hero: typography on background, no surface ─── */
+.page-hero {
+  padding-bottom: 2.5rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 768px) {
+  .page-hero {
+    padding-bottom: 3.5rem;
+    margin-bottom: 3.5rem;
+  }
+}
+
+.editorial-frame {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.editorial-frame::after {
+  content: '';
+  position: absolute;
+  inset: 1.1rem;
+  border: 1px solid rgba(241, 244, 248, 0.07);
+  border-radius: 1.5rem;
+  pointer-events: none;
+}
+
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--line);
+  border-top-color: rgba(237, 233, 224, 0.1);
+  background: var(--surface);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    140deg,
+    rgba(237, 233, 224, 0.04),
+    transparent 35%
+  );
+  pointer-events: none;
+}
+
+.liquid-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+.liquid-glass-strong {
+  background: var(--panel);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.38);
+}
+
+.liquid-glass-soft {
+  background: rgba(20, 18, 17, 0.7);
+}
+
+.liquid-glass-stage {
+  background: radial-gradient(
+      circle at 16% 14%,
+      rgba(140, 25, 40, 0.3),
+      transparent 22%
+    ),
+    radial-gradient(circle at 84% 18%, rgba(165, 125, 38, 0.2), transparent 16%),
+    radial-gradient(circle at 70% 78%, rgba(120, 20, 36, 0.18), transparent 14%),
+    linear-gradient(180deg, rgba(237, 233, 224, 0.06), rgba(8, 6, 5, 0.32));
+}
+
+.liquid-button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(237, 233, 224, 0.16);
+  background: rgba(237, 233, 224, 0.06);
+  box-shadow: inset 0 1px 0 rgba(237, 233, 224, 0.1);
+  transition: transform 180ms ease, border-color 180ms ease,
+    background 180ms ease;
+}
+
+.liquid-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(237, 233, 224, 0.26);
+  background: rgba(237, 233, 224, 0.1);
+}
+
+.liquid-button-primary {
+  background: var(--foreground);
+  border-color: var(--foreground);
+  color: var(--background);
+}
+
+.liquid-button-primary:hover {
+  background: rgba(237, 233, 224, 0.9);
+  border-color: rgba(237, 233, 224, 0.9);
+}
+
+.liquid-chip {
+  border: 1px solid rgba(237, 233, 224, 0.12);
+  background: rgba(237, 233, 224, 0.05);
+  box-shadow: inset 0 1px 0 rgba(237, 233, 224, 0.08);
+}
+
+.liquid-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--foreground);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.liquid-input::placeholder {
+  color: rgba(122, 112, 104, 0.8);
+}
+
+.liquid-input:focus {
+  border-color: rgba(237, 233, 224, 0.22);
+  outline: none;
+}
+
+.liquid-input option {
+  background: var(--panel);
+  color: var(--foreground);
+}
+
+/* ── editorial event row — horizontal listing on agenda ─── */
+.event-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr auto;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding-block: 1.25rem;
+  border-top: 1px solid var(--line);
+  transition: background 160ms ease;
+}
+
+.event-row:hover {
+  background: rgba(237, 233, 224, 0.025);
+}
+
+@media (max-width: 767px) {
+  .event-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+.ambient-grid {
+  background-image: linear-gradient(
+      rgba(241, 244, 248, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(241, 244, 248, 0.05) 1px, transparent 1px);
+  background-size: 2.75rem 2.75rem;
+}
+
+.ambient-orbit {
+  animation: ambient-float 10s ease-in-out infinite;
+}
+
+.ambient-orbit-delayed {
+  animation: ambient-float 13s ease-in-out infinite reverse;
+}
+
+.ambient-line {
+  animation: ambient-slide 14s linear infinite;
+}
+
+/* ── entrance & scroll-driven animations ─── */
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Page-load entrance: plays once on render */
+@media (prefers-reduced-motion: no-preference) {
+  .anim-up {
+    animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .anim-in {
+    animation: reveal-in 0.8s ease both;
+  }
+}
+
+.anim-delay-100 {
+  animation-delay: 100ms;
+}
+.anim-delay-200 {
+  animation-delay: 200ms;
+}
+.anim-delay-300 {
+  animation-delay: 300ms;
+}
+.anim-delay-400 {
+  animation-delay: 400ms;
+}
+.anim-delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Scroll-driven reveals: progressive enhancement for modern browsers */
+.scroll-reveal {
+  /* fallback: always visible */
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-reveal {
+      animation: reveal-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 32%;
+    }
+  }
+}
+
+@keyframes liquid-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(-1%, 2%, 0) scale(0.98);
+  }
+}
+
+@keyframes ambient-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -12px, 0) scale(1.03);
+  }
+}
+
+@keyframes ambient-slide {
+  0% {
+    transform: translateX(-8%);
+  }
+
+  50% {
+    transform: translateX(8%);
+  }
+
+  100% {
+    transform: translateX(-8%);
+  }
 }
