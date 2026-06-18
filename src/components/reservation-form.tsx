@@ -14,8 +14,8 @@ type SubmissionState = {
 };
 
 const channelOptions: { value: ContactChannel; label: string }[] = [
-    { value: "whatsapp", label: "WhatsApp" },
-    { value: "telegram", label: "Telegram" },
+    // { value: "whatsapp", label: "WhatsApp" },
+    // { value: "telegram", label: "Telegram" },
     { value: "email", label: "E-Mail" },
 ];
 
@@ -127,9 +127,9 @@ export function ReservationForm({
             {/* Channel — editorial tab selector, no radio buttons */}
             <div className="flex flex-col gap-3">
                 <span className="eyebrow text-[0.6rem] tracking-[0.34em] text-muted">
-                    Cómo te contactamos
+                    E-mail
                 </span>
-                <div role="tablist" className="flex border-b border-line">
+                {/* <div role="tablist" className="flex border-b border-line">
                     {channelOptions.map((option) => (
                         <button
                             key={option.value}
@@ -138,8 +138,8 @@ export function ReservationForm({
                             aria-selected={channel === option.value}
                             onClick={() => setChannel(option.value)}
                             className={`relative mr-5 pb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition-colors last:mr-0 ${channel === option.value
-                                    ? "text-foreground"
-                                    : "text-muted hover:text-foreground/60"
+                                ? "text-foreground"
+                                : "text-muted hover:text-foreground/60"
                                 }`}
                         >
                             {option.label}
@@ -148,7 +148,7 @@ export function ReservationForm({
                             )}
                         </button>
                     ))}
-                </div>
+                </div> */}
             </div>
 
             {/* Contact value */}

@@ -12,7 +12,7 @@ export default function Home() {
         <article className="py-6 md:py-10 xl:py-14">
           <p className="eyebrow text-xs tracking-[0.38em] text-accent-red">La Yunta · Club Social</p>
           <h1 className="anim-up anim-delay-100 font-display mt-7 italic max-w-4xl text-[3.6rem] leading-[0.93] tracking-[-0.03em] text-foreground md:text-[5.8rem] xl:text-[7rem]">
-            Una agenda oscura para perderse entre milongas, ritual y madrugada.
+            Un espacio de encuentro para descubrir la noche porteña entre tangos y amigos.
           </h1>
           <p className="anim-up anim-delay-300 mt-8 max-w-2xl text-lg leading-8 text-muted md:text-xl md:leading-9">
             Negro, humo, blanco roto y apenas un destello de rojo para marcar presencia.
